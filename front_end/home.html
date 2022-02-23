@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catbook</title>
+    <script src="./js/iconfont.js"></script>
+    <script src="./js/axios.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f1f1f1;
+            margin: 2rem;
+        }
+
+        .blog-card {
+            display: flex;
+            flex-direction: column;
+            margin: 1rem auto;
+            box-shadow: 0 3px 7px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.6%;
+            background: #fff;
+            line-height: 1.4;
+            font-family: sans-serif;
+            border-radius: 5px;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .blog-card a {
+            color: inherit;
+        }
+
+        .blog-card a:hover {
+            color: #5ad67d;
+        }
+
+        .blog-card:hover .photo {
+            transform: scale(1.3);
+        }
+
+        .blog-card .meta {
+            position: relative;
+            z-index: 0;
+            height: 200px;
+        }
+
+        .blog-card .photo {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background-size: cover;
+            background-position: center;
+            transition: transform 0.2s;
+        }
+
+
+        .blog-card .description {
+            padding: 1rem;
+            background: #fff;
+            position: relative;
+            z-index: 1;
+        }
+
+        .blog-card .description h1,
+        .blog-card .description h2 {
+            font-family: Poppins, sans-serif;
+        }
+
+        .blog-card .description h1 {
+            line-height: 1;
+            margin: 0;
+            font-size: 1.7rem;
+        }
+
+        .blog-card .description h2 {
+            font-size: 1rem;
+            font-weight: 300;
+            text-transform: uppercase;
+            color: #a2a2a2;
+            margin-top: 5px;
+        }
+
+        .blog-card p {
+            position: relative;
+            margin: 1rem 0 0;
+        }
+
+        .blog-card p:first-of-type {
+            margin-top: 1.25rem;
+        }
+
+        .blog-card p:first-of-type:before {
+            content: "";
+            position: absolute;
+            height: 5px;
+            background: #5ad67d;
+            width: 35px;
+            top: -0.75rem;
+            border-radius: 3px;
+        }
+
+        .blog-card:hover .details {
+            left: 0%;
+        }
+
+        @media (min-width: 640px) {
+            .blog-card {
+                flex-direction: row;
+                max-width: 700px;
+            }
+
+            .blog-card .meta {
+                flex-basis: 40%;
+                height: auto;
+            }
+
+            .blog-card .description {
+                flex-basis: 60%;
+            }
+
+            .blog-card .description:before {
+                transform: skewX(-3deg);
+                content: "";
+                background: #fff;
+                width: 30px;
+                position: absolute;
+                left: -10px;
+                top: 0;
+                bottom: 0;
+                z-index: -1;
+            }
+
+            .blog-card.alt {
+                flex-direction: row-reverse;
+            }
+
+            .blog-card.alt .description:before {
+                left: inherit;
+                right: -10px;
+                transform: skew(3deg);
+            }
+
+            .blog-card.alt .details {
+                padding-left: 25px;
+            }
+        }
+
+        /* menu */
+        @font-face {
+            font-family: 'Open Sans';
+            font-style: normal;
+            font-weight: 300;
+            font-stretch: normal;
+            src: url(https://fonts.gstatic.com/s/opensans/v27/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsiH0B4gaVc.ttf) format('truetype');
+        }
+
+        @font-face {
+            font-family: 'Pacifico';
+            font-style: normal;
+            font-weight: 400;
+            src: url(https://fonts.gstatic.com/s/pacifico/v17/FwZY7-Qmy14u9lezJ-6H6Mw.ttf) format('truetype');
+        }
+
+        .flex-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        * {
+            box-sizing: border-box;
+            /* font-family: 'Open Sans', sans-serif;
+            font-weight: 300; */
+        }
+
+        a,
+        a:visited,
+        a:hover,
+        a:active {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        h1 {
+            font-family: 'Pacifico', cursive;
+            font-weight: 400;
+            font-size: 3em;
+            text-align: center;
+        }
+
+        .outer-menu {
+            position: fixed;
+            top: 15vh;
+            /* top: 0; */
+            left: 0;
+            z-index: 1;
+        }
+
+        .outer-menu .checkbox-toggle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2;
+            cursor: pointer;
+            width: 60px;
+            height: 60px;
+            opacity: 0;
+        }
+
+        .outer-menu .checkbox-toggle:checked+.hamburger>div {
+            transform: rotate(135deg);
+        }
+
+        .outer-menu .checkbox-toggle:checked+.hamburger>div:before,
+        .outer-menu .checkbox-toggle:checked+.hamburger>div:after {
+            top: 0;
+            transform: rotate(90deg);
+        }
+
+        .outer-menu .checkbox-toggle:checked+.hamburger>div:after {
+            opacity: 0;
+        }
+
+        .outer-menu .checkbox-toggle:checked~.menu {
+            pointer-events: auto;
+            visibility: visible;
+        }
+
+        .outer-menu .checkbox-toggle:checked~.menu>div {
+            transform: scale(1);
+            transition-duration: 0.75s;
+        }
+
+        .outer-menu .checkbox-toggle:checked~.menu>div>div {
+            opacity: 1;
+            transition: opacity 0.4s ease 0.4s;
+        }
+
+        .outer-menu .checkbox-toggle:hover+.hamburger {
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .outer-menu .checkbox-toggle:checked:hover+.hamburger>div {
+            transform: rotate(225deg);
+        }
+
+        .outer-menu .hamburger {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            width: 60px;
+            height: 60px;
+            padding: 0.5em 1em;
+            background: rgba(33, 150, 243, 0.75);
+            border-radius: 0 0.12em 0.12em 0;
+            cursor: pointer;
+            transition: box-shadow 0.4s ease;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .outer-menu .hamburger>div {
+            position: relative;
+            flex: none;
+            width: 100%;
+            height: 2px;
+            background: #FEFEFE;
+            transition: all 0.4s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .outer-menu .hamburger>div:before,
+        .outer-menu .hamburger>div:after {
+            content: '';
+            position: absolute;
+            z-index: 1;
+            top: -10px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: inherit;
+            transition: all 0.4s ease;
+        }
+
+        .outer-menu .hamburger>div:after {
+            top: 10px;
+        }
+
+        .outer-menu .menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            visibility: hidden;
+            overflow: hidden;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            outline: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .outer-menu .menu>div {
+            width: 200vw;
+            height: 200vw;
+            color: #FEFEFE;
+            background: #3498DB;
+            border-radius: 50%;
+            transition: all 0.4s ease;
+            flex: none;
+            transform: scale(0);
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .outer-menu .menu>div>div {
+            text-align: center;
+            max-width: 90vw;
+            max-height: 100vh;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            overflow-y: auto;
+            flex: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .outer-menu .menu>div>div>ul {
+            list-style: none;
+            padding: 0 1em;
+            margin: 0;
+            display: block;
+            max-height: 100vh;
+        }
+
+        .outer-menu .menu>div>div>ul>li {
+            padding: 0;
+            margin: 1em;
+            font-size: 24px;
+            display: block;
+        }
+
+        .outer-menu .menu>div>div>ul>li>a {
+            position: relative;
+            display: inline;
+            cursor: pointer;
+            transition: color 0.4s ease;
+        }
+
+        .outer-menu .menu>div>div>ul>li>a:hover {
+            color: #e5e5e5;
+        }
+
+        .outer-menu .menu>div>div>ul>li>a:hover:after {
+            width: 100%;
+        }
+
+        .outer-menu .menu>div>div>ul>li>a:after {
+            content: '';
+            position: absolute;
+            z-index: 1;
+            bottom: -0.15em;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #e5e5e5;
+            transition: width 0.4s ease;
+        }
+
+        .outer-menu {
+            z-index: 999;
+        }
+
+        #header {
+            width: 100%;
+            height: 75px;
+            background-color: #3498DB;
+            font-size: 60px;
+            color: #fff;
+            font-family: 'Open Sans', sans-serif;
+            position: fixed;
+            top: 0;
+            z-index: 999;
+        }
+
+        .blog {
+            margin-top: 100px;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        .icon {
+            width: 1em;
+            height: 1em;
+            vertical-align: -0.15em;
+            fill: currentColor;
+            overflow: hidden;
+        }
+        .btn {
+        border: 2px solid transparent;
+        background: #55b1f3;
+        color: #ffffff;
+        font-size: 16px;
+        line-height: 15px;
+        padding: 10px 0;
+        text-decoration: none;
+        text-shadow: none;
+        border-radius: 3px;
+        box-shadow: none;
+        transition: 0.25s;
+        display: inline;
+        width: 60px;
+        margin: 0 8px;
+        float: right;
+      }
+
+      .btn:hover {
+        background-color: #3995d3;
+      }
+    </style>
+</head>
+
+<body>
+    <div id="header">Catbook</div>
+    <div class="outer-menu">
+        <input class="checkbox-toggle" type="checkbox" />
+        <div class="hamburger">
+            <div></div>
+        </div>
+        <div class="menu">
+            <div>
+                <div>
+                    <ul>
+                        <li><a href="/home.html">首页</a></li>
+                        <li><a href="/upload.html">上传</a></li>
+                        <li><a href="/login.html">登录</a></li>
+                        <li><a href="/regis.html">注册</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="blog">
+        <div class="blog-card" id="test1">
+            <div class="meta">
+                <div class="photo"
+                    style="background-image: url(https://storage.googleapis.com/chydlx/codepen/blog-cards/image-1.jpg)">
+                </div>
+            </div>
+            <div class="description">
+                <h1>1111</h1>
+                <h2><svg class="icon" aria-hidden="true">
+                        <use xlink:href="#icon-cat_"></use>
+                    </svg>&nbsp22222</h2>
+                <h2><svg class="icon" aria-hidden="true">
+                        <use xlink:href="#icon-xiangjixiao
+                    "></use>
+                    </svg>&nbsp333333</h2>
+                <p><svg class="icon" aria-hidden="true">
+                        <use xlink:href="#icon-dingweixiao
+                    "></use>
+                    </svg>44444</p>
+                <p>
+                    <button class="btn blog_del" style="cursor: pointer">删除</button><button class="btn blog_edit" style="cursor: pointer">编辑</button>
+                </p>
+
+            </div>
+        </div>
+        <div class="blog-card alt" id="test">
+            <div class="meta">
+                <div class="photo"
+                    style="background-image: url(https://storage.googleapis.com/chydlx/codepen/blog-cards/image-2.jpg)">
+                </div>
+
+            </div>
+            <div class="description">
+                <h1>111111</h1>
+                <h2>222222</h2>
+                <h2>33333</h2>
+                <p>44444</p>
+                <p>
+                    <button class="btn blog_del" style="cursor: pointer">删除</button><button class="btn blog_edit" style="cursor: pointer">编辑</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+
+    </div>
+
+    <script>
+        var test = document.querySelector("#test")
+        var test1 = document.querySelector("#test1")
+        // testbtn.onclick=function(){
+        //     console.log(this.parentNode.parentNode.children[0].childNodes[0]);
+        // }
+        window.onload = function () {
+            var token = window.localStorage.getItem("token");
+            axios.get("http://120.77.221.202:1016/posts/show", {
+                headers: {
+                    authorization: `Bearer ${token}`
+                }
+            }).then(function (response) {
+
+                for (var i = 0; i < response.data.data.TotalLength; i++) {
+                    if (i % 2 == 0) {
+                        var t = test1.cloneNode(true)
+                        // var t=document.createElement('div')
+                        // t.innerHTML='<div class="blog-card alt" id="test"><div class="meta"><div class="photo" style="background-image: url(https://storage.googleapis.com/chydlx/codepen/blog-cards/image-2.jpg)"></div></div><div class="description"><h1>Mastering the Language</h1><h2>Java is not the same as JavaScript</h2><p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ad eum dolorum architecto obcaecati enim dicta praesentium, quam nobis! Neque ad aliquam facilis numquam. Veritatis, sit..</p></div></div>'
+                        console.log(t.children[1].children[0]);
+                        t.children[1].children[0].innerHTML = response.data.data.data[i].cat_name
+                        t.children[1].children[1].innerHTML = `<svg class="icon" aria-hidden="true"><use xlink:href="#icon-cat_"></use></svg>&nbsp` + response.data.data.data[i].breed + `&nbsp` + response.data.data.data[i].color
+                        t.children[1].children[2].innerHTML = `<svg class="icon" aria-hidden="true"><use xlink:href="#icon-dingweixiao"></use></svg>&nbsp` + response.data.data.data[i].place + `&nbsp` + response.data.data.data[i].specific
+                        t.children[1].children[3].innerHTML = `<svg class="icon" aria-hidden="true"><use xlink:href="#icon-xiangjixiao"></use></svg>&nbsp by ` + response.data.data.data[i].user_name
+                        t.children[0].children[0].style.backgroundImage = `url(${response.data.data.data[i].img_url})`
+                        var body = document.getElementsByTagName('body')[0]
+                        body.appendChild(t)
+                    } else {
+                        var t = test.cloneNode(true)
+                        // var t=document.createElement('div')
+                        // t.innerHTML='<div class="blog-card alt" id="test"><div class="meta"><div class="photo" style="background-image: url(https://storage.googleapis.com/chydlx/codepen/blog-cards/image-2.jpg)"></div></div><div class="description"><h1>Mastering the Language</h1><h2>Java is not the same as JavaScript</h2><p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ad eum dolorum architecto obcaecati enim dicta praesentium, quam nobis! Neque ad aliquam facilis numquam. Veritatis, sit..</p></div></div>'
+                        console.log(t.children[1].children[0]);
+                        t.children[1].children[0].innerHTML = response.data.data.data[i].cat_name
+                        t.children[1].children[1].innerHTML = `<svg class="icon" aria-hidden="true"><use xlink:href="#icon-cat_"></use></svg>&nbsp` + response.data.data.data[i].breed + `&nbsp` + response.data.data.data[i].color
+                        t.children[1].children[2].innerHTML = `<svg class="icon" aria-hidden="true"><use xlink:href="#icon-dingweixiao"></use></svg>&nbsp` + response.data.data.data[i].place + `&nbsp` + response.data.data.data[i].specific
+                        t.children[1].children[3].innerHTML = `<svg class="icon" aria-hidden="true"><use xlink:href="#icon-xiangjixiao"></use></svg>&nbsp by ` + response.data.data.data[i].user_name
+                        t.children[0].children[0].style.backgroundImage = `url(${response.data.data.data[i].img_url})`
+                        var body = document.getElementsByTagName('body')[0]
+                        body.appendChild(t)
+                        
+                    }
+                }
+                body.children[3].children[0].style.display = "none"
+                body.children[3].children[1].style.display = "none"
+
+                //添加删除和编辑功能
+                
+                var blog_del = document.getElementsByClassName("blog_del")
+                var blog_edit = document.getElementsByClassName("blog_edit")
+                for (var i = 0; i < blog_del.length; i++) {
+                    blog_del[i].onclick = function () {
+                        console.log('delete');
+                        var tokenval=window.localStorage.getItem("token");
+                        console.log(tokenval);
+                        var nameval=this.parentNode.parentNode.children[0].innerText
+                        console.log(nameval);
+                        axios.post("http://120.77.221.202:1016/posts/delete", {
+                                cat_name: nameval,
+                            }, {
+                                headers: {
+                                    authorization: `Bearer ${tokenval}`
+                                },
+                            })
+                            .then(function (response) {
+                                console.log(response.data);
+                                // alert(response.data.msg);
+                                // console.log(response.data.data.token);
+                                // window.localStorage.setItem("token", response.data.data.token); //保存到cookie中
+                                // var token = window.localStorage.getItem("token");
+                                // console.log(token);
+                                window.location.href = "./home.html";
+                            })
+                            .catch(function (error) {
+                                console.log(error);
+                                alert(error.response.data.msg); 
+                            });
+                    }
+                    blog_edit[i].onclick = function () {
+                        var nameval=this.parentNode.parentNode.children[0].innerText
+                        var breedval=this.parentNode.parentNode.children[1].innerText
+                        var placeval=this.parentNode.parentNode.children[2].innerText
+                        var breed_categories = breedval.trim().split(/\s+/);
+                        var place_specific = placeval.trim().split(/\s+/);
+                        //alert(breedval.trim().split(/\s+/));
+                        window.localStorage.setItem("update_cat_name", nameval);
+                        window.localStorage.setItem("update_breed", breed_categories[0]);
+                        window.localStorage.setItem("update_color", breed_categories[1]);
+                        window.localStorage.setItem("update_place", place_specific[0]);
+                        window.localStorage.setItem("update_specific", place_specific[1]);
+                        // window.localStorage.setItem("update_cat_name", nameval);
+                        // window.localStorage.setItem("update_cat_name", nameval);
+                        // window.localStorage.setItem("update_cat_name", nameval);
+                        window.location.href = "./update.html";
+                        console.log('edit');
+                   }
+                }
+                console.log(2);
+
+            }).catch(function (error) {
+                if (error.response.data.code == 401) {
+                    alert(error.response.data.msg);
+                    window.location.href = "./login.html";
+                }
+                alert(error);
+            });
+        }
+    </script>
+</body>
+
+</html>

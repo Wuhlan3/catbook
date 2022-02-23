@@ -1,0 +1,14 @@
+server:
+  port: 1016
+datasource:
+  driverName: mysql
+  host: 127.0.0.1
+  port: 3306
+  database: catbook
+  username: root
+  password: Ling18
+  charset: utf8
+img:
+  path: /usr/share/nginx/catbook/front_end/img/
+front_end:
+  client: http://120.77.221.202
